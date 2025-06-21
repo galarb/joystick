@@ -59,18 +59,30 @@ class joystick:
 
         if self.left.value() == 0:
             vx = -1
+            print("left")  
+
         elif self.right.value() == 0:
             vx = 1
+            print("right")  
+
 
         if self.up.value() == 0:
             vy = 1
+            print("up")  
+
         elif self.down.value() == 0:
             vy = -1
+            print("down")  
 
         if self.speedup.value() == 0:
             omega = -1
+            #print("speed up")  
+
         elif self.speeddown.value() == 0:
             omega = 1
+            #print("speed down")  
+
+        #print("Raw vector:", (vx, vy, omega))  
 
         return vx, vy, omega
 
@@ -96,7 +108,8 @@ class joystick:
         return vx * self.speed, vy * self.speed, omega * self.speed
 
     def send_vector(self):
+        
         vx, vy, omega = self.get_scaled_vector()
         payload = json.dumps({"vx": vx, "vy": vy, "omega": omega})
         self.client.publish(MQTT_TOPIC, payload.encode())
-
+        
