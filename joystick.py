@@ -6,8 +6,6 @@ import json
 
 WIFI_SSID = "estupit"
 WIFI_PASSWORD = "lafamilia"
-MQTT_BROKER = "10.100.102.47"
-MQTT_TOPIC = b"control/vector"
 
 class joystick:
     def __init__(self,
@@ -34,8 +32,6 @@ class joystick:
 
     def connect_wifi(self):
         wlan = network.WLAN(network.STA_IF)
-        wlan.active(False)
-        time.sleep(1)
         wlan.active(True)
         wlan.connect(WIFI_SSID, WIFI_PASSWORD)
         print("Connecting to Wi-Fi...", end="")
@@ -49,8 +45,11 @@ class joystick:
         print("\nConnected! IP:", wlan.ifconfig()[0])
 
     def connect_mqtt(self):
-        self.client.connect()
-        print("MQTT connected")
+        try:
+            self.client.connect()
+            print("MQTT connected")
+        except Exception as e:
+            print("MQTT connect failed:", e)
 
     def get_vector(self):
         vx = 0
@@ -59,31 +58,27 @@ class joystick:
 
         if self.left.value() == 0:
             vx = -1
-            print("left")  
-
+            #print('left')
+            
         elif self.right.value() == 0:
             vx = 1
-            print("right")  
-
+            #print('right')
 
         if self.up.value() == 0:
             vy = 1
-            print("up")  
+            #print('up')
 
         elif self.down.value() == 0:
             vy = -1
-            print("down")  
+            #print('down')
+
 
         if self.speedup.value() == 0:
             omega = -1
-            #print("speed up")  
-
         elif self.speeddown.value() == 0:
             omega = 1
-            #print("speed down")  
 
-        #print("Raw vector:", (vx, vy, omega))  
-
+        #print("Vector:", vx, vy, omega)  # 👈 For debug
         return vx, vy, omega
 
     def update_speed(self):
@@ -108,8 +103,10 @@ class joystick:
         return vx * self.speed, vy * self.speed, omega * self.speed
 
     def send_vector(self):
-        
-        vx, vy, omega = self.get_scaled_vector()
-        payload = json.dumps({"vx": vx, "vy": vy, "omega": omega})
-        self.client.publish(MQTT_TOPIC, payload.encode())
-        
+        try:
+            vx, vy, omega = self.get_scaled_vector()
+            payload = json.dumps({"vx": vx, "vy": vy, "omega": omega})
+            self.client.publish(b"control/vector", payload.encode())
+        except Exception as e:
+            print("MQTT publish failed:", e)
+
